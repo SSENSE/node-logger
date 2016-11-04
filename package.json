@@ -1,0 +1,29 @@
+{
+  "name": "@ssense/logger",
+  "version": "0.1.0",
+  "description": "Application and access logger",
+  "main": "src/index.js",
+  "scripts": {
+    "postinstall": "./node_modules/.bin/typings install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Groupe-Atallah/logger.git"
+  },
+  "keywords": [
+    "logger",
+    "restify"
+  ],
+  "author": "Cédric Maruéjol <cedric.maruejol@ssense.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Groupe-Atallah/logger/issues"
+  },
+  "homepage": "https://github.com/Groupe-Atallah/logger#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2",
+    "ts-node": "^1.6.1"
+  }
+}

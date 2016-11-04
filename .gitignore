@@ -1,0 +1,14 @@
+# IDEs
+.idea/
+.vscode/
+
+# Npm - Typescript
+node_modules/
+typings/
+.nyc_output/
+
+# Tests stuff
+tests/coverage
+
+# Logs
+npm-debug.log*

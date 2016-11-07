@@ -1,5 +1,6 @@
-var uuid = require('uuid');
-var moment = require('moment');
+"use strict";
+const uuid = require('uuid');
+const moment = require('moment');
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
@@ -16,8 +17,8 @@ var Color;
     Color[Color["blue"] = 34] = "blue";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
-var AppLogger = (function () {
-    function AppLogger() {
+class AppLogger {
+    constructor() {
         this.stream = process.stderr;
         this.level = LogLevel.Info;
         if (!AppLogger.instance) {
@@ -25,11 +26,11 @@ var AppLogger = (function () {
             this.writer = this.stream.write;
         }
     }
-    AppLogger.GetInstance = function () {
+    static GetInstance() {
         return AppLogger.instance;
-    };
-    AppLogger.prototype.colorizeLevel = function (level) {
-        var color = null;
+    }
+    colorizeLevel(level) {
+        let color = null;
         switch (level) {
             case LogLevel.Error:
                 color = Color.red;
@@ -50,72 +51,77 @@ var AppLogger = (function () {
                 color = 0;
                 break;
         }
-        return "\u001B[" + color + "m" + LogLevel[level].toLowerCase() + "\u001B[0m";
-    };
-    AppLogger.prototype.setStream = function (stream) {
+        console.log(color);
+        return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
+    }
+    setStream(stream) {
         this.stream = stream;
         this.enable(true);
-    };
-    AppLogger.prototype.enable = function (enabled) {
-        this.writer = function () { };
+    }
+    enable(enabled) {
+        this.writer = () => { };
         if (enabled && this.stream && this.stream.write) {
             this.writer = this.stream.write;
         }
-    };
-    AppLogger.prototype.setAppId = function (appId) {
+    }
+    setAppId(appId) {
         this.appId = appId;
-    };
-    AppLogger.prototype.getAppId = function () {
+    }
+    getAppId() {
         return this.appId;
-    };
-    AppLogger.prototype.setRequestId = function (requestId) {
+    }
+    setRequestId(requestId) {
         this.requestId = requestId;
-    };
-    AppLogger.prototype.getRequestId = function () {
+    }
+    getRequestId() {
         return this.requestId;
-    };
-    AppLogger.prototype.generateRequestId = function () {
+    }
+    generateRequestId() {
         return this.appId + '/' + uuid.v4();
-    };
-    AppLogger.prototype.setLevel = function (level) {
+    }
+    setLevel(level) {
         this.level = LogLevel[level || ''];
         if (this.level === undefined) {
             this.enable(false);
         }
-    };
-    AppLogger.prototype.getLevel = function () {
+    }
+    getLevel() {
         return this.level;
-    };
-    AppLogger.prototype.log = function (level, message, id, tags, details) {
+    }
+    log(level, message, id, tags, details) {
         if (this.level === undefined || level < this.level) {
             return;
         }
-        this.writer.call(this.stream, JSON.stringify({
-            log_id: this.requestId,
+        const logData = {
+            log_id: id || this.requestId,
             datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
             level: LogLevel[level].toLowerCase(),
             message: message,
             tags: tags || [],
             details: details || null
-        }) + '\n');
-    };
-    AppLogger.prototype.silly = function (message, id, tags, details) {
+        };
+        let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
+        if (typeof logData.details === 'string') {
+            result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+        }
+        this.stream.write(`${result}\n`);
+    }
+    silly(message, id, tags, details) {
         this.log(LogLevel.Silly, message, id, tags, details);
-    };
-    AppLogger.prototype.verbose = function (message, id, tags, details) {
+    }
+    verbose(message, id, tags, details) {
         this.log(LogLevel.Verbose, message, id, tags, details);
-    };
-    AppLogger.prototype.info = function (message, id, tags, details) {
+    }
+    info(message, id, tags, details) {
         this.log(LogLevel.Info, message, id, tags, details);
-    };
-    AppLogger.prototype.warn = function (message, id, tags, details) {
+    }
+    warn(message, id, tags, details) {
         this.log(LogLevel.Warn, message, id, tags, details);
-    };
-    AppLogger.prototype.error = function (message, id, tags, details) {
+    }
+    error(message, id, tags, details) {
         this.log(LogLevel.Error, message, id, tags, details);
-    };
-    AppLogger.instance = new AppLogger();
-    return AppLogger;
-})();
+    }
+}
+AppLogger.instance = new AppLogger();
 exports.AppLogger = AppLogger;
 //# sourceMappingURL=AppLogger.js.map

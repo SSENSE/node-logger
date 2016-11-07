@@ -31,6 +31,8 @@ export class AppLogger {
 
     private static instance: AppLogger = new AppLogger();
 
+    private pretty: Boolean = false;
+
     constructor() {
         if (!AppLogger.instance) {
             AppLogger.instance = this;
@@ -99,20 +101,34 @@ export class AppLogger {
         return this.level;
     }
 
+    public makePretty(pretty: Boolean): void{
+        this.pretty = pretty;
+    }
+
     public log(level: LogLevel, message: string, id?: string, tags?: string[], details?: any): void {
 
         if (this.level === undefined || level < this.level) {
             return;
         }
 
-        this.writer.call(this.stream, JSON.stringify({
-                log_id: this.requestId,
-                datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
-                level: LogLevel[level].toLowerCase(),
-                message: message,
-                tags: tags || [],
-                details: details || null
-            }) + '\n');
+        const logData: any = {
+            log_id: id || this.requestId,
+            datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
+            level: LogLevel[level].toLowerCase(),
+            message: message,
+            tags: tags || [],
+            details: details || null
+        };
+
+        if (this.pretty) {
+            let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
+            if (typeof logData.details === 'string') {
+                result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+            }
+            this.stream.write(`${result}\n`);
+        } else {
+            this.stream.write(JSON.stringify(logData) + '\n');
+        }
     }
 
     public silly(message: string, id?: string, tags?: string[], details?: any): void {

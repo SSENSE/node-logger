@@ -14,20 +14,26 @@ export class AccessLogger {
 
     private writer: Function;
 
-    private liteMode: boolean;
+    private pretty: Boolean = false;
 
-    public constructor(liteMode: boolean = false) {
-        this.liteMode = liteMode;
+    public constructor(liteMode: Boolean = false) {
         this.writer = this.stream.write;
     }
 
-    public enable(enabled: boolean): void {
+    public enable(enabled: Boolean): void {
         this.writer = () => {}; // tslint:disable-line no-empty
         if (enabled && this.stream && this.stream.write) {
             this.writer = this.stream.write;
         }
     }
 
+    public makePretty(pretty: Boolean): void{
+        this.pretty = pretty;
+    }
+
+    /**
+     * @TODO - this could be used for tests, since 'sinon' is used for tests maybe this could be removed
+     */
     public setStream(stream: {write: Function}): void {
         this.stream = stream;
         this.enable(true);
@@ -37,7 +43,7 @@ export class AccessLogger {
 
         let line: string = null;
 
-        if (this.liteMode) {
+        if (this.pretty) {
             // Colorized, wimpy, developer logs
             const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m`;

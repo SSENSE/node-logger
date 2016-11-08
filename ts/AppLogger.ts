@@ -58,6 +58,9 @@ export class AppLogger {
         return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
     }
 
+    /**
+     * @TODO - this could be used for tests, since 'sinon' is used for tests maybe this could be removed
+     */
     public setStream(stream: {write: Function}): void {
         this.stream = stream;
         this.enable(true);

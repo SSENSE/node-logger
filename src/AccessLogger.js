@@ -1,5 +1,4 @@
-"use strict";
-const moment = require('moment');
+import * as moment from 'moment';
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -7,10 +6,10 @@ var Color;
     Color[Color["yellow"] = 33] = "yellow";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
-class AccessLogger {
+export class AccessLogger {
     constructor(liteMode = false) {
         this.stream = process.stdout;
-        this.liteMode = liteMode;
+        this.pretty = false;
         this.writer = this.stream.write;
     }
     enable(enabled) {
@@ -19,13 +18,16 @@ class AccessLogger {
             this.writer = this.stream.write;
         }
     }
+    makePretty(pretty) {
+        this.pretty = pretty;
+    }
     setStream(stream) {
         this.stream = stream;
         this.enable(true);
     }
     logRequest(req, res) {
         let line = null;
-        if (this.liteMode) {
+        if (this.pretty) {
             const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m`;
         }
@@ -46,5 +48,4 @@ class AccessLogger {
         this.writer.call(this.stream, `${line}\n`);
     }
 }
-exports.AccessLogger = AccessLogger;
 //# sourceMappingURL=AccessLogger.js.map

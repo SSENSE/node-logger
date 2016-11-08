@@ -1,14 +1,13 @@
-"use strict";
-const uuid = require('uuid');
-const moment = require('moment');
+import * as uuid from 'uuid';
+import * as moment from 'moment';
+export var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
     LogLevel[LogLevel["Info"] = 2] = "Info";
     LogLevel[LogLevel["Warn"] = 4] = "Warn";
     LogLevel[LogLevel["Error"] = 5] = "Error";
-})(exports.LogLevel || (exports.LogLevel = {}));
-var LogLevel = exports.LogLevel;
+})(LogLevel || (LogLevel = {}));
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -17,10 +16,11 @@ var Color;
     Color[Color["blue"] = 34] = "blue";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
-class AppLogger {
+export class AppLogger {
     constructor() {
         this.stream = process.stderr;
         this.level = LogLevel.Info;
+        this.pretty = false;
         if (!AppLogger.instance) {
             AppLogger.instance = this;
             this.writer = this.stream.write;
@@ -51,7 +51,6 @@ class AppLogger {
                 color = 0;
                 break;
         }
-        console.log(color);
         return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
     }
     setStream(stream) {
@@ -88,6 +87,9 @@ class AppLogger {
     getLevel() {
         return this.level;
     }
+    makePretty(pretty) {
+        this.pretty = pretty;
+    }
     log(level, message, id, tags, details) {
         if (this.level === undefined || level < this.level) {
             return;
@@ -100,11 +102,16 @@ class AppLogger {
             tags: tags || [],
             details: details || null
         };
-        let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
-        if (typeof logData.details === 'string') {
-            result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+        if (this.pretty) {
+            let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
+            if (typeof logData.details === 'string') {
+                result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+            }
+            this.stream.write(`${result}\n`);
         }
-        this.stream.write(`${result}\n`);
+        else {
+            this.stream.write(JSON.stringify(logData) + '\n');
+        }
     }
     silly(message, id, tags, details) {
         this.log(LogLevel.Silly, message, id, tags, details);
@@ -123,5 +130,4 @@ class AppLogger {
     }
 }
 AppLogger.instance = new AppLogger();
-exports.AppLogger = AppLogger;
 //# sourceMappingURL=AppLogger.js.map

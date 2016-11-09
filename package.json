@@ -53,5 +53,10 @@
       "text",
       "text-summary"
     ]
+  },
+  "dependencies": {
+    "@ssense/tslint-config": "^2.1.1",
+    "moment": "^2.15.2",
+    "uuid": "^2.0.3"
   }
 }

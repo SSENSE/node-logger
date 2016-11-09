@@ -4,6 +4,3 @@ node_js:
   - "6"
   - "5"
   - "4"
-
-install:
-  - npm install && npm run typings-install

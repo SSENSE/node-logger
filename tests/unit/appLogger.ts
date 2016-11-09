@@ -12,7 +12,7 @@ describe('AppLogger', () => {
         });
     });
 
-    it('logs fine', (done) => {
+    it('logs fine', (done: Function) => {
         const logger = AppLogger.GetInstance();
         logger.setAppId('test');
         logger.enable(true);
@@ -27,7 +27,7 @@ describe('AppLogger', () => {
         done();
     });
 
-    it('has the properties it should', (done) => {
+    it('has the properties it should', (done: Function) => {
         const logger = AppLogger.GetInstance();
         logger.setAppId('test');
         logger.enable(true);

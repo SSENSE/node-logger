@@ -100,11 +100,11 @@ export class AppLogger {
         }
     }
 
-    public getLevel(): LogLevel  {
+    public getLevel(): LogLevel {
         return this.level;
     }
 
-    public makePretty(pretty: Boolean): void{
+    public makePretty(pretty: Boolean): void {
         this.pretty = pretty;
     }
 

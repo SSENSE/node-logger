@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "declaration": true,
     "target": "ES6",
     "module": "commonjs",
     "outDir": "./src/",
@@ -9,7 +10,6 @@
   },
   "exclude": [
     "node_modules",
-    "typings/globals",
     "tests"
   ]
 }

@@ -1,13 +1,14 @@
-import * as uuid from 'uuid';
-import * as moment from 'moment';
-export var LogLevel;
+"use strict";
+const uuid = require('uuid');
+const moment = require('moment');
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
     LogLevel[LogLevel["Info"] = 2] = "Info";
     LogLevel[LogLevel["Warn"] = 4] = "Warn";
     LogLevel[LogLevel["Error"] = 5] = "Error";
-})(LogLevel || (LogLevel = {}));
+})(exports.LogLevel || (exports.LogLevel = {}));
+var LogLevel = exports.LogLevel;
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -16,7 +17,7 @@ var Color;
     Color[Color["blue"] = 34] = "blue";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
-export class AppLogger {
+class AppLogger {
     constructor() {
         this.stream = process.stderr;
         this.level = LogLevel.Info;
@@ -130,4 +131,5 @@ export class AppLogger {
     }
 }
 AppLogger.instance = new AppLogger();
+exports.AppLogger = AppLogger;
 //# sourceMappingURL=AppLogger.js.map

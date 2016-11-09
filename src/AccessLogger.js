@@ -1,4 +1,5 @@
-import * as moment from 'moment';
+"use strict";
+const moment = require('moment');
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -6,7 +7,7 @@ var Color;
     Color[Color["yellow"] = 33] = "yellow";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
-export class AccessLogger {
+class AccessLogger {
     constructor(liteMode = false) {
         this.stream = process.stdout;
         this.pretty = false;
@@ -48,4 +49,5 @@ export class AccessLogger {
         this.writer.call(this.stream, `${line}\n`);
     }
 }
+exports.AccessLogger = AccessLogger;
 //# sourceMappingURL=AccessLogger.js.map

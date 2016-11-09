@@ -4,6 +4,7 @@
   "description": "Application and access logger",
   "main": "./src/index.js",
   "scripts": {
+    "prepublish": "npm run compile",
     "compile": "rm -rf src/* && tsc",
     "test": "NODE_ENV=test mocha tests/unit --recursive --compilers ts:ts-node/register --bail",
     "cover": "nyc --report-dir tests/coverage/ npm run test"

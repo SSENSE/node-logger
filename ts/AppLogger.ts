@@ -6,8 +6,8 @@ export enum LogLevel {
     Silly = 0,
     Verbose = 1,
     Info = 2,
-    Warn = 4,
-    Error = 5
+    Warn = 3,
+    Error = 4
 }
 
 enum Color {

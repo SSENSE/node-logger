@@ -13,10 +13,9 @@ describe('AppLogger', () => {
     });
 
     it('logs fine', (done: Function) => {
-        const logger = AppLogger.GetInstance();
+        const logger = new AppLogger(0, process.stderr);
         logger.setAppId('test');
         logger.enable(true);
-        logger.setLevel('Silly');
 
         logger.verbose('toto');
         this.log.restore();
@@ -28,7 +27,7 @@ describe('AppLogger', () => {
     });
 
     it('has the properties it should', (done: Function) => {
-        const logger = AppLogger.GetInstance();
+        const logger = new AppLogger(0, process.stderr);
         logger.setAppId('test');
         logger.enable(true);
         logger.setLevel('Silly');

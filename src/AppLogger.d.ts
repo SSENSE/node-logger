@@ -8,6 +8,10 @@ export declare enum LogLevel {
     Error = 4,
 }
 export interface Logger {
+    enable(enabled: boolean): void;
+    setAppId(appId: string): void;
+    setLevel(level: string): void;
+    makePretty(pretty: Boolean): void;
 }
 export declare class AppLogger implements Logger {
     private stream;

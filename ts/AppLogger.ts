@@ -18,8 +18,12 @@ enum Color {
     cyan = 36
 }
 
-// @TODO - Add interface for DI
-export interface Logger {}
+export interface Logger {
+    enable(enabled: boolean): void;
+    setAppId(appId: string): void;
+    setLevel(level: string): void;
+    makePretty(pretty: Boolean): void;
+}
 
 export class AppLogger implements Logger {
 

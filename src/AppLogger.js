@@ -5,8 +5,8 @@ const moment = require('moment');
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
     LogLevel[LogLevel["Info"] = 2] = "Info";
-    LogLevel[LogLevel["Warn"] = 4] = "Warn";
-    LogLevel[LogLevel["Error"] = 5] = "Error";
+    LogLevel[LogLevel["Warn"] = 3] = "Warn";
+    LogLevel[LogLevel["Error"] = 4] = "Error";
 })(exports.LogLevel || (exports.LogLevel = {}));
 var LogLevel = exports.LogLevel;
 var Color;
@@ -18,17 +18,10 @@ var Color;
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
 class AppLogger {
-    constructor() {
-        this.stream = process.stderr;
-        this.level = LogLevel.Info;
+    constructor(level = LogLevel.Info, stream = process.stderr) {
         this.pretty = false;
-        if (!AppLogger.instance) {
-            AppLogger.instance = this;
-            this.writer = this.stream.write;
-        }
-    }
-    static GetInstance() {
-        return AppLogger.instance;
+        this.level = level;
+        this.stream = stream;
     }
     colorizeLevel(level) {
         let color = null;
@@ -53,10 +46,6 @@ class AppLogger {
                 break;
         }
         return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
-    }
-    setStream(stream) {
-        this.stream = stream;
-        this.enable(true);
     }
     enable(enabled) {
         this.writer = () => { };
@@ -130,6 +119,5 @@ class AppLogger {
         this.log(LogLevel.Error, message, id, tags, details);
     }
 }
-AppLogger.instance = new AppLogger();
 exports.AppLogger = AppLogger;
 //# sourceMappingURL=AppLogger.js.map

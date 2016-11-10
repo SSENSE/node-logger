@@ -1,24 +1,23 @@
+/// <reference types="node" />
+import WritableStream = NodeJS.WritableStream;
 export declare enum LogLevel {
     Silly = 0,
     Verbose = 1,
     Info = 2,
-    Warn = 4,
-    Error = 5,
+    Warn = 3,
+    Error = 4,
 }
-export declare class AppLogger {
+export interface Logger {
+}
+export declare class AppLogger implements Logger {
     private stream;
     private writer;
     private appId;
     private requestId;
     private level;
-    private static instance;
     private pretty;
-    constructor();
-    static GetInstance(): AppLogger;
+    constructor(level?: LogLevel, stream?: WritableStream);
     private colorizeLevel(level);
-    setStream(stream: {
-        write: Function;
-    }): void;
     enable(enabled: boolean): void;
     setAppId(appId: string): void;
     getAppId(): string;

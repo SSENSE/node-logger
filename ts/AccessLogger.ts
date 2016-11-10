@@ -8,6 +8,8 @@ enum Color {
     cyan = 36
 }
 
+// @TODO - Add interface for DI
+
 export class AccessLogger {
 
     private stream: {write: Function} = process.stdout;

@@ -1,6 +1,6 @@
 {
   "name": "@ssense/logger",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Application and access logger",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

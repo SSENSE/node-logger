@@ -1,3 +1,4 @@
+import WritableStream = NodeJS.WritableStream;
 import * as uuid from 'uuid';
 import * as moment from 'moment';
 
@@ -17,9 +18,12 @@ enum Color {
     cyan = 36
 }
 
-export class AppLogger {
+// @TODO - Add interface for DI
+export interface Logger {}
 
-    private stream: {write: Function} = process.stderr;
+export class AppLogger implements Logger {
+
+    private stream: WritableStream;
 
     private writer: Function;
 
@@ -27,21 +31,13 @@ export class AppLogger {
 
     private requestId: string;
 
-    private level: LogLevel = LogLevel.Info;
-
-    private static instance: AppLogger = new AppLogger();
+    private level: LogLevel;
 
     private pretty: Boolean = false;
 
-    constructor() {
-        if (!AppLogger.instance) {
-            AppLogger.instance = this;
-            this.writer = this.stream.write;
-        }
-    }
-
-    public static GetInstance(): AppLogger {
-        return AppLogger.instance;
+    constructor(level: LogLevel = LogLevel.Info, stream: WritableStream = process.stderr) {
+        this.level = level;
+        this.stream = stream;
     }
 
     private colorizeLevel(level: LogLevel): string {
@@ -56,14 +52,6 @@ export class AppLogger {
         }
 
         return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
-    }
-
-    /**
-     * @TODO - this could be used for tests, since 'sinon' is used for tests maybe this could be removed
-     */
-    public setStream(stream: {write: Function}): void {
-        this.stream = stream;
-        this.enable(true);
     }
 
     public enable(enabled: boolean): void {

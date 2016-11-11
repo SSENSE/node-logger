@@ -1,9 +1,9 @@
 {
   "name": "@ssense/node-logger",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "Application and access logger",
   "main": "./src/index.js",
-  "types": "./src/index",
+  "typings": "./src/index",
   "scripts": {
     "prepublish": "npm run compile",
     "compile": "rm -rf src/* && tsc",

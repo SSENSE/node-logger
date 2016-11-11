@@ -13,6 +13,7 @@ export interface Logger {
     setLevel(level: string): void;
     makePretty(pretty: Boolean): void;
     setRequestId(requestId: string): void;
+    getRequestId(): string;
     generateRequestId(): string;
     silly(message: string, id?: string, tags?: string[], details?: any): void;
     verbose(message: string, id?: string, tags?: string[], details?: any): void;

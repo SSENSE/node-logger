@@ -12,6 +12,13 @@ export interface Logger {
     setAppId(appId: string): void;
     setLevel(level: string): void;
     makePretty(pretty: Boolean): void;
+    setRequestId(requestId: string): void;
+    generateRequestId(): string;
+    silly(message: string, id?: string, tags?: string[], details?: any): void;
+    verbose(message: string, id?: string, tags?: string[], details?: any): void;
+    info(message: string, id?: string, tags?: string[], details?: any): void;
+    warn(message: string, id?: string, tags?: string[], details?: any): void;
+    error(message: string, id?: string, tags?: string[], details?: any): void;
 }
 export declare class AppLogger implements Logger {
     private stream;

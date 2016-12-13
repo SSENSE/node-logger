@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/SSENSE/node-logger.svg?branch=develop)](https://travis-ci.org/SSENSE/node-logger)
 
 
+SSENSE Standardized Logs
+
 
 ## Application Logger
 

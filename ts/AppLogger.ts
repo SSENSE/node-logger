@@ -1,3 +1,4 @@
+import WritableStream = NodeJS.WritableStream;
 import * as uuid from 'uuid';
 import * as moment from 'moment';
 
@@ -5,8 +6,8 @@ export enum LogLevel {
     Silly = 0,
     Verbose = 1,
     Info = 2,
-    Warn = 4,
-    Error = 5
+    Warn = 3,
+    Error = 4
 }
 
 enum Color {
@@ -17,9 +18,24 @@ enum Color {
     cyan = 36
 }
 
-export class AppLogger {
+export interface Logger {
+    enable(enabled: boolean): void;
+    setAppId(appId: string): void;
+    setLevel(level: string): void;
+    makePretty(pretty: Boolean): void;
+    setRequestId(requestId: string): void;
+    getRequestId(): string;
+    generateRequestId(): string;
+    silly(message: string, id?: string, tags?: string[], details?: any): void;
+    verbose(message: string, id?: string, tags?: string[], details?: any): void;
+    info(message: string, id?: string, tags?: string[], details?: any): void;
+    warn(message: string, id?: string, tags?: string[], details?: any): void;
+    error(message: string, id?: string, tags?: string[], details?: any): void;
+}
 
-    private stream: {write: Function} = process.stderr;
+export class AppLogger implements Logger {
+
+    private stream: WritableStream;
 
     private writer: Function;
 
@@ -27,21 +43,13 @@ export class AppLogger {
 
     private requestId: string;
 
-    private level: LogLevel = LogLevel.Info;
-
-    private static instance: AppLogger = new AppLogger();
+    private level: LogLevel;
 
     private pretty: Boolean = false;
 
-    constructor() {
-        if (!AppLogger.instance) {
-            AppLogger.instance = this;
-            this.writer = this.stream.write;
-        }
-    }
-
-    public static GetInstance(): AppLogger {
-        return AppLogger.instance;
+    constructor(level: LogLevel = LogLevel.Info, stream: WritableStream = process.stderr) {
+        this.level = level;
+        this.stream = stream;
     }
 
     private colorizeLevel(level: LogLevel): string {
@@ -56,11 +64,6 @@ export class AppLogger {
         }
 
         return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
-    }
-
-    public setStream(stream: {write: Function}): void {
-        this.stream = stream;
-        this.enable(true);
     }
 
     public enable(enabled: boolean): void {
@@ -97,11 +100,11 @@ export class AppLogger {
         }
     }
 
-    public getLevel(): LogLevel  {
+    public getLevel(): LogLevel {
         return this.level;
     }
 
-    public makePretty(pretty: Boolean): void{
+    public makePretty(pretty: Boolean): void {
         this.pretty = pretty;
     }
 

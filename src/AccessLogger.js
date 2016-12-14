@@ -10,7 +10,7 @@ var Color;
 class AccessLogger {
     constructor(liteMode = false) {
         this.stream = process.stdout;
-        this.liteMode = liteMode;
+        this.pretty = false;
         this.writer = this.stream.write;
     }
     enable(enabled) {
@@ -19,13 +19,16 @@ class AccessLogger {
             this.writer = this.stream.write;
         }
     }
+    makePretty(pretty) {
+        this.pretty = pretty;
+    }
     setStream(stream) {
         this.stream = stream;
         this.enable(true);
     }
     logRequest(req, res) {
         let line = null;
-        if (this.liteMode) {
+        if (this.pretty) {
             const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m`;
         }

@@ -1,14 +1,14 @@
 "use strict";
-const uuid = require('uuid');
-const moment = require('moment');
+const uuid = require("uuid");
+const moment = require("moment");
+var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
     LogLevel[LogLevel["Info"] = 2] = "Info";
     LogLevel[LogLevel["Warn"] = 3] = "Warn";
     LogLevel[LogLevel["Error"] = 4] = "Error";
-})(exports.LogLevel || (exports.LogLevel = {}));
-var LogLevel = exports.LogLevel;
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -58,12 +58,6 @@ class AppLogger {
     }
     getAppId() {
         return this.appId;
-    }
-    setRequestId(requestId) {
-        this.requestId = requestId;
-    }
-    getRequestId() {
-        return this.requestId;
     }
     generateRequestId() {
         return this.appId + '/' + uuid.v4();
@@ -117,6 +111,15 @@ class AppLogger {
     }
     error(message, id, tags, details) {
         this.log(LogLevel.Error, message, id, tags, details);
+    }
+    getRequestLogger(requestId) {
+        const logger = {};
+        for (const logFunction of ['silly', 'verbose', 'info', 'warn', 'error']) {
+            logger[logFunction] = (message, tags, details) => {
+                this[logFunction].call(this, message, requestId, tags, details);
+            };
+        }
+        return logger;
     }
 }
 exports.AppLogger = AppLogger;

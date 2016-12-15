@@ -1,5 +1,5 @@
 "use strict";
-const moment = require('moment');
+const moment = require("moment");
 var Color;
 (function (Color) {
     Color[Color["red"] = 31] = "red";
@@ -8,7 +8,7 @@ var Color;
     Color[Color["cyan"] = 36] = "cyan";
 })(Color || (Color = {}));
 class AccessLogger {
-    constructor(liteMode = false) {
+    constructor() {
         this.stream = process.stdout;
         this.pretty = false;
         this.writer = this.stream.write;

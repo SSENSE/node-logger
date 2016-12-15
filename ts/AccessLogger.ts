@@ -18,7 +18,7 @@ export class AccessLogger {
 
     private pretty: Boolean = false;
 
-    public constructor(liteMode: Boolean = false) {
+    public constructor() {
         this.writer = this.stream.write;
     }
 

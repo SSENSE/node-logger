@@ -3,7 +3,7 @@ export declare class AccessLogger {
     private stream;
     private writer;
     private pretty;
-    constructor(liteMode?: Boolean);
+    constructor();
     enable(enabled: Boolean): void;
     makePretty(pretty: Boolean): void;
     setStream(stream: {

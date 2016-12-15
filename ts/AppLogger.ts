@@ -23,14 +23,20 @@ export interface Logger {
     setAppId(appId: string): void;
     setLevel(level: string): void;
     makePretty(pretty: Boolean): void;
-    setRequestId(requestId: string): void;
-    getRequestId(): string;
     generateRequestId(): string;
     silly(message: string, id?: string, tags?: string[], details?: any): void;
     verbose(message: string, id?: string, tags?: string[], details?: any): void;
     info(message: string, id?: string, tags?: string[], details?: any): void;
     warn(message: string, id?: string, tags?: string[], details?: any): void;
     error(message: string, id?: string, tags?: string[], details?: any): void;
+}
+
+export interface RequestLogger {
+    silly(message: string, tags?: string[], details?: any): void;
+    verbose(message: string, tags?: string[], details?: any): void;
+    info(message: string, tags?: string[], details?: any): void;
+    warn(message: string, tags?: string[], details?: any): void;
+    error(message: string, tags?: string[], details?: any): void;
 }
 
 export class AppLogger implements Logger {
@@ -79,14 +85,6 @@ export class AppLogger implements Logger {
 
     public getAppId(): string {
         return this.appId;
-    }
-
-    public setRequestId(requestId: string): void {
-        this.requestId = requestId;
-    }
-
-    public getRequestId(): string {
-        return this.requestId;
     }
 
     public generateRequestId(): string {
@@ -152,5 +150,17 @@ export class AppLogger implements Logger {
 
     public error(message: string, id?: string, tags?: string[], details?: any): void {
         this.log(LogLevel.Error, message, id, tags, details);
+    }
+
+    public getRequestLogger(requestId: string): RequestLogger {
+        const logger: any = {};
+
+        for (const logFunction of ['silly', 'verbose', 'info', 'warn', 'error']) {
+            logger[logFunction] = (message: string, tags?: string[], details?: any) => {
+                (<any> this)[logFunction].call(this, message, requestId, tags, details);
+            };
+        }
+
+        return logger;
     }
 }

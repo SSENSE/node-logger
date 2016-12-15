@@ -10,7 +10,7 @@ SSENSE Standardized Logs
 
 ```javascript
 // Inclusion
-import {Logger} from '@ssense/node-logger';
+import {Logger, LogLevel} from '@ssense/node-logger';
 ```
 ```javascript
 // Usage
@@ -30,7 +30,14 @@ logger.makePretty(true);
 // warn(message: string, id?: string, tags?: string[], details?: any)
 // error(message: string, id?: string, tags?: string[], details?: any)
 logger.silly('Some log message');
-logger.error(`Error with paypal express checkout: ${orderId}`, logger.getRequestId(), ['checkout', 'paypal'], error.stack);
+logger.error(`Error with paypal express checkout: ${orderId}`, 'MY_REQUEST_ID', ['checkout', 'paypal'], error.stack);
+```
+
+## Request Logger
+
+```js
+req.logger = logger.getRequestLogger('MY_REQUEST_ID');
+req.logger.error(`Error with paypal express checkout: ${orderId}`, ['checkout', 'paypal'], error.stack);
 ```
 
 ## Access logger
@@ -40,11 +47,11 @@ import {AccessLogger} from '@ssense/node-logger';
 ```
 
 ```javascript
-const accessLogger = new AccessLogger(process.env.NODE_ENV === 'development');
+const accessLogger = new AccessLogger();
 // Enable / Disable
 accessLogger.enable(true);
 // Prettify / Indent
-accessLogger.makePretty(true);
+accessLogger.makePretty(process.env.NODE_ENV === 'development');
 
 // Log
 // logRequest(req: Request, res: Response)

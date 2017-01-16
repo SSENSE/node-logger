@@ -1,6 +1,6 @@
 {
   "name": "@ssense/node-logger",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Application and access logger",
   "main": "./src/index.js",
   "typings": "./src/index",
@@ -26,8 +26,6 @@
   "homepage": "https://github.com/SSENSE/node-logger#readme",
   "dependencies": {
     "@ssense/tslint-config": "^2.1.1",
-    "@types/moment": "^2.13.0",
-    "@types/restify": "^2.0.34",
     "moment": "^2.15.2",
     "restify": "^4.2.0",
     "uuid": "^2.0.3"
@@ -35,7 +33,9 @@
   "devDependencies": {
     "@types/chai": "^3.4.34",
     "@types/mocha": "^2.2.32",
+    "@types/moment": "^2.13.0",
     "@types/node": "^6.0.46",
+    "@types/restify": "^2.0.34",
     "@types/sinon": "^1.16.31",
     "chai": "^3.5.0",
     "mocha": "^3.1.2",
@@ -49,7 +49,6 @@
       "ts/*.ts"
     ],
     "exclude": [
-      "typings",
       "node_modules",
       "ts/index.ts"
     ],

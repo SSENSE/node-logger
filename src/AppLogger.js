@@ -1,57 +1,55 @@
 "use strict";
-const uuid = require('uuid');
-const moment = require('moment');
+Object.defineProperty(exports, "__esModule", { value: true });
+const moment = require("moment");
+const Common_1 = require("./Common");
+var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
     LogLevel[LogLevel["Verbose"] = 1] = "Verbose";
     LogLevel[LogLevel["Info"] = 2] = "Info";
     LogLevel[LogLevel["Warn"] = 3] = "Warn";
     LogLevel[LogLevel["Error"] = 4] = "Error";
-})(exports.LogLevel || (exports.LogLevel = {}));
-var LogLevel = exports.LogLevel;
-var Color;
-(function (Color) {
-    Color[Color["red"] = 31] = "red";
-    Color[Color["green"] = 32] = "green";
-    Color[Color["yellow"] = 33] = "yellow";
-    Color[Color["blue"] = 34] = "blue";
-    Color[Color["cyan"] = 36] = "cyan";
-})(Color || (Color = {}));
+})(LogLevel = exports.LogLevel || (exports.LogLevel = {}));
+const logLevelFunctions = Object.keys(LogLevel).map(k => LogLevel[k])
+    .filter(v => typeof v === 'string')
+    .map((k) => k.toLowerCase());
 class AppLogger {
-    constructor(level = LogLevel.Info, stream = process.stderr) {
+    constructor(appId, level = LogLevel.Info, stream = process.stderr) {
+        this.enabled = true;
         this.pretty = false;
+        this.appId = appId;
         this.level = level;
         this.stream = stream;
+    }
+    getLogLevel(level) {
+        return typeof LogLevel[level] === 'string' ? LogLevel[level].toLowerCase() : 'log';
     }
     colorizeLevel(level) {
         let color = null;
         switch (level) {
             case LogLevel.Error:
-                color = Color.red;
+                color = Common_1.Color.red;
                 break;
             case LogLevel.Warn:
-                color = Color.yellow;
+                color = Common_1.Color.yellow;
                 break;
             case LogLevel.Info:
-                color = Color.green;
+                color = Common_1.Color.green;
                 break;
             case LogLevel.Verbose:
-                color = Color.blue;
+                color = Common_1.Color.blue;
                 break;
             case LogLevel.Silly:
-                color = Color.cyan;
+                color = Common_1.Color.cyan;
                 break;
             default:
                 color = 0;
                 break;
         }
-        return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
+        return `\x1B[${color}m${this.getLogLevel(level)}\x1B[0m`;
     }
     enable(enabled) {
-        this.writer = () => { };
-        if (enabled && this.stream && this.stream.write) {
-            this.writer = this.stream.write;
-        }
+        this.enabled = enabled;
     }
     setAppId(appId) {
         this.appId = appId;
@@ -59,35 +57,30 @@ class AppLogger {
     getAppId() {
         return this.appId;
     }
-    setRequestId(requestId) {
-        this.requestId = requestId;
-    }
-    getRequestId() {
-        return this.requestId;
-    }
     generateRequestId() {
-        return this.appId + '/' + uuid.v4();
+        return Common_1.generateRequestId(this.appId);
     }
     setLevel(level) {
-        this.level = LogLevel[level || ''];
-        if (this.level === undefined) {
-            this.enable(false);
-        }
+        this.level = level;
     }
     getLevel() {
         return this.level;
     }
-    makePretty(pretty) {
+    setPretty(pretty) {
         this.pretty = pretty;
     }
+    setStream(stream) {
+        this.stream = stream;
+        this.enable(true);
+    }
     log(level, message, id, tags, details) {
-        if (this.level === undefined || level < this.level) {
+        if (this.enabled !== true || this.level === undefined || level < this.level) {
             return;
         }
         const logData = {
             log_id: id || this.requestId,
             datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
-            level: LogLevel[level].toLowerCase(),
+            level: this.getLogLevel(level),
             message: message,
             tags: tags || [],
             details: details || null
@@ -117,6 +110,15 @@ class AppLogger {
     }
     error(message, id, tags, details) {
         this.log(LogLevel.Error, message, id, tags, details);
+    }
+    getRequestLogger(requestId) {
+        const logger = {};
+        for (const logFunction of logLevelFunctions) {
+            logger[logFunction] = (message, tags, details) => {
+                this[logFunction].call(this, message, requestId, tags, details);
+            };
+        }
+        return logger;
     }
 }
 exports.AppLogger = AppLogger;

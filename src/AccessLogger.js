@@ -1,52 +1,64 @@
 "use strict";
-const moment = require('moment');
-var Color;
-(function (Color) {
-    Color[Color["red"] = 31] = "red";
-    Color[Color["green"] = 32] = "green";
-    Color[Color["yellow"] = 33] = "yellow";
-    Color[Color["cyan"] = 36] = "cyan";
-})(Color || (Color = {}));
+Object.defineProperty(exports, "__esModule", { value: true });
+const moment = require("moment");
+const Common_1 = require("./Common");
 class AccessLogger {
-    constructor(liteMode = false) {
-        this.stream = process.stdout;
+    constructor(appId) {
+        this.enabled = true;
         this.pretty = false;
-        this.writer = this.stream.write;
+        this.stream = process.stdout;
+        this.appId = appId;
     }
     enable(enabled) {
-        this.writer = () => { };
-        if (enabled && this.stream && this.stream.write) {
-            this.writer = this.stream.write;
-        }
+        this.enabled = enabled;
     }
-    makePretty(pretty) {
+    setPretty(pretty) {
         this.pretty = pretty;
     }
     setStream(stream) {
         this.stream = stream;
         this.enable(true);
     }
+    setAppId(appId) {
+        this.appId = appId;
+    }
     logRequest(req, res) {
+        if (this.enabled !== true) {
+            return;
+        }
+        // Work in progress stuff to add request latency in express
+        // if (req.on) {
+        //     const start = process.hrtime();
+        //     req.on('end', () => {
+        //         const end = process.hrtime();
+        //         const ms = (end[0] - start[0]) * 1e3 + (end[1] - start[1]) * 1e-6;
+        //         console.log(ms.toFixed(3));
+        //     });
+        // }
         let line = null;
         if (this.pretty) {
-            const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
-            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m`;
+            // tslint:disable-next-line:max-line-length
+            const color = res.statusCode >= 500 ? Common_1.Color.red : res.statusCode >= 400 ? Common_1.Color.yellow : res.statusCode >= 300 ? Common_1.Color.cyan : Common_1.Color.green;
+            const latency = req._time ? `${Date.now() - req._time} ms` : '-';
+            const size = res.getHeader('content-length') || '-';
+            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
         }
         else {
+            // SSENSE Standardized Access Logs
             const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
-            const reqId = req.header('x-request-id') || '-';
-            const userId = '-';
+            const reqId = req.xRequestId || Common_1.generateRequestId(this.appId);
+            const userId = '-'; // TODO: Implement it for your application
             const date = moment().format('DD/MMM/YYYY:HH:mm:ss ZZ');
             const method = req.method;
             const query = req.url;
             const httpVersion = `HTTP/${req.httpVersion}`;
             const code = res.statusCode;
-            const size = res.header('content-length') || '-';
+            const size = res.getHeader('content-length') || '-';
             const referer = req.header('referer') || '-';
             const browser = req.header('user-agent') || '-';
             line = `${ip} ${reqId} ${userId} [${date}] "${method} ${query} ${httpVersion}" ${code} ${size} "${referer}" "${browser}"`;
         }
-        this.writer.call(this.stream, `${line}\n`);
+        this.stream.write(`${line}\n`);
     }
 }
 exports.AccessLogger = AccessLogger;

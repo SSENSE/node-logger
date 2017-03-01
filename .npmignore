@@ -1,0 +1,7 @@
+.nyc_output
+tests
+ts
+tsconfig.json
+tslint.json
+.gitignore
+.travis.yml

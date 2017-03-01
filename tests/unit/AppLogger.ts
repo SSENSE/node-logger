@@ -1,84 +1,88 @@
 import {expect} from 'chai';
 import * as sinon from 'sinon';
-import {AppLogger} from '../../ts/AppLogger';
+import {SinonSandbox} from 'sinon';
+import * as uuid from 'uuid';
+import {AppLogger, LogLevel} from '../../ts/AppLogger';
+
+let lastLog: string;
+const appId = 'my-app';
+let sandbox: SinonSandbox;
 
 describe('AppLogger', () => {
-
-    beforeEach(() => {
-        // Stub console.log to store the output in a var
-        this.output = '';
-        this.log = sinon.stub(process.stderr, 'write', (message: string) => {
-            this.output += message;
-        });
+    before(() => {
+        sandbox = sinon.sandbox.create();
     });
 
-    it('logs fine', (done: Function) => {
-        const logger = new AppLogger(0, process.stderr);
-        logger.setAppId('test');
-        logger.enable(true);
-
-        logger.info('toto');
-        this.log.restore();
-
-        expect(this.output).to.contain('toto');
-        expect(this.output).to.contain('info');
-
-        done();
+    afterEach(() => {
+        sandbox.restore();
     });
 
-    it('logs in a pretty format', (done: Function) => {
-        const logger = new AppLogger(0, process.stderr);
-        logger.setAppId('test');
-        logger.enable(true);
-        logger.makePretty(true);
-
-        logger.silly('toto');
-        this.log.restore();
-
-        expect((this.output.match(/\n/g) || []).length).to.be.above(1);
-
-        done();
+    it('AppLogger::log()', () => {
+        const logger = new AppLogger(appId);
+        logger.setStream(<any> { write: (data: string) => {
+            lastLog = data;
+        }});
+        logger.silly('foo');
+        expect(lastLog).to.equal(undefined, 'Last log should be empty');
+        logger.info('foo');
+        expect(lastLog).to.contain('foo');
+        expect(lastLog).to.not.contain('\x1B');
+        logger.setPretty(true);
+        logger.warn('bar', 'logId', [], 'aaa\nbbb');
+        expect(lastLog).to.not.contain('foo');
+        expect(lastLog).to.contain('\x1B');
+        expect(lastLog).to.contain(`${' '.repeat(12)}bbb`);
+        logger.setLevel(LogLevel.Silly);
+        logger.verbose('foobar');
+        expect(lastLog).to.contain('foobar');
+        logger.error('foobar');
+        expect(lastLog).to.contain('\x1B[31');
+        logger.info('foobar');
+        expect(lastLog).to.contain('\x1B[32');
+        logger.silly('foobar');
+        expect(lastLog).to.contain('\x1B[36');
+        logger.log(10, 'foo');
+        expect(lastLog).to.contain('\x1B[0mlog\x1B[0m');
     });
 
-    it('has the properties it should', (done: Function) => {
-        const logger = new AppLogger(0, process.stderr);
-        logger.setAppId('test');
-        logger.enable(true);
-        logger.setLevel('Silly');
+    it('AppLogger::getters/setters', () => {
+        const logger = new AppLogger(appId);
 
-        logger.verbose('toto');
-        this.log.restore();
+        // AppId
+        expect(logger.getAppId()).to.equal(appId);
+        logger.setAppId('foo');
+        expect(logger.getAppId()).to.equal('foo');
 
-        expect(this.output).to.contain('datetime');
-        expect(this.output).to.contain('level');
-        expect(this.output).to.contain('message');
-        expect(this.output).to.contain('tags');
-        expect(this.output).to.contain('details');
-
-        done();
+        // Level
+        expect(logger.getLevel()).to.equal(LogLevel.Info);
+        logger.setLevel(LogLevel.Silly);
+        expect(logger.getLevel()).to.equal(LogLevel.Silly);
     });
 
-    it('should create request loggers', (done: Function) => {
-        const logger = new AppLogger(0, process.stderr);
-        logger.setAppId('test');
-        logger.enable(true);
-        logger.setLevel('Silly');
+    it('AppLogger::generateRequestId()', () => {
+        const logger = new AppLogger(appId);
+        sandbox.stub(uuid, 'v4', () => 'foo');
+        expect(logger.generateRequestId()).to.equal(`${appId}/foo`);
+    });
 
-        const requestLogger1 = logger.getRequestLogger('REQUEST_ID_1');
-        const requestLogger2 = logger.getRequestLogger('REQUEST_ID_2');
-        requestLogger1.warn('toto');
+    it('AppLogger::getRequestLogger()', () => {
+        const logger = new AppLogger(appId);
+        logger.setStream(<any> { write: (data: string) => {
+            lastLog = data;
+        }});
 
-        const requestOutput1 = this.output;
-        this.output = '';
+        sandbox.stub(uuid, 'v4', () => 'foo');
+        const reqLogger = logger.getRequestLogger(logger.generateRequestId());
+        expect(reqLogger).to.have.property('silly');
+        expect(reqLogger).to.have.property('verbose');
+        expect(reqLogger).to.have.property('info');
+        expect(reqLogger).to.have.property('warn');
+        expect(reqLogger).to.have.property('error');
 
-        requestLogger2.error('toto');
-        const requestOutput2 = this.output;
-
-        expect(requestOutput1).to.contain('REQUEST_ID_1');
-        expect(requestOutput2).to.contain('REQUEST_ID_2');
-
-
-        this.log.restore();
-        done();
+        reqLogger.info('foo');
+        const result = JSON.parse(lastLog);
+        expect(result.log_id).to.equal(`${appId}/foo`);
+        expect(result.level).to.equal('info');
+        expect(result.message).to.equal('foo');
     });
 });

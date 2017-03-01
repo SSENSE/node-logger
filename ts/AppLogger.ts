@@ -1,6 +1,5 @@
-import WritableStream = NodeJS.WritableStream;
-import * as uuid from 'uuid';
 import * as moment from 'moment';
+import {Color, generateRequestId} from './Common';
 
 export enum LogLevel {
     Silly = 0,
@@ -10,20 +9,19 @@ export enum LogLevel {
     Error = 4
 }
 
-enum Color {
-    red = 31,
-    green = 32,
-    yellow = 33,
-    blue = 34,
-    cyan = 36
-}
+const logLevelFunctions: string[] = Object.keys(LogLevel).map(k => (<any> LogLevel)[k])
+    .filter(v => typeof v === 'string')
+    .map((k) => k.toLowerCase());
 
 export interface Logger {
     enable(enabled: boolean): void;
     setAppId(appId: string): void;
-    setLevel(level: string): void;
+    setLevel(level: LogLevel): void;
     makePretty(pretty: Boolean): void;
+    setStream(stream: {write: Function}): void;
     generateRequestId(): string;
+
+    log(level: LogLevel, message: string, id?: string, tags?: string[], details?: any): void;
     silly(message: string, id?: string, tags?: string[], details?: any): void;
     verbose(message: string, id?: string, tags?: string[], details?: any): void;
     info(message: string, id?: string, tags?: string[], details?: any): void;
@@ -41,21 +39,21 @@ export interface RequestLogger {
 
 export class AppLogger implements Logger {
 
-    private stream: WritableStream;
-
-    private writer: Function;
-
+    private stream: {write: Function};
+    private enabled: boolean = true;
     private appId: string;
-
     private requestId: string;
-
     private level: LogLevel;
+    private pretty: boolean = false;
 
-    private pretty: Boolean = false;
-
-    constructor(level: LogLevel = LogLevel.Info, stream: WritableStream = process.stderr) {
+    constructor(appId: string, level: LogLevel = LogLevel.Info, stream: {write: Function} = process.stderr) {
+        this.appId = appId;
         this.level = level;
         this.stream = stream;
+    }
+
+    private getLogLevel(level: LogLevel): string {
+        return typeof LogLevel[level] === 'string' ? LogLevel[level].toLowerCase() : 'log';
     }
 
     private colorizeLevel(level: LogLevel): string {
@@ -69,14 +67,11 @@ export class AppLogger implements Logger {
             default: color = 0; break;
         }
 
-        return `\x1B[${color}m${LogLevel[level].toLowerCase()}\x1B[0m`;
+        return `\x1B[${color}m${this.getLogLevel(level)}\x1B[0m`;
     }
 
     public enable(enabled: boolean): void {
-        this.writer = () => {}; // tslint:disable-line no-empty
-        if (enabled && this.stream && this.stream.write) {
-            this.writer = this.stream.write;
-        }
+        this.enabled = enabled;
     }
 
     public setAppId(appId: string): void {
@@ -88,34 +83,36 @@ export class AppLogger implements Logger {
     }
 
     public generateRequestId(): string {
-        return this.appId + '/' + uuid.v4();
+        return generateRequestId(this.appId);
     }
 
-    public setLevel(level: string): void {
-        this.level = <LogLevel> (<any> LogLevel)[level || ''];
-        if (this.level === undefined) {
-            this.enable(false);
-        }
+    public setLevel(level: LogLevel): void {
+        this.level = level;
     }
 
     public getLevel(): LogLevel {
         return this.level;
     }
 
-    public makePretty(pretty: Boolean): void {
+    public makePretty(pretty: boolean): void {
         this.pretty = pretty;
+    }
+
+    public setStream(stream: {write: Function}): void {
+        this.stream = stream;
+        this.enable(true);
     }
 
     public log(level: LogLevel, message: string, id?: string, tags?: string[], details?: any): void {
 
-        if (this.level === undefined || level < this.level) {
+        if (this.enabled !== true || this.level === undefined || level < this.level) {
             return;
         }
 
         const logData: any = {
             log_id: id || this.requestId,
             datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
-            level: LogLevel[level].toLowerCase(),
+            level: this.getLogLevel(level),
             message: message,
             tags: tags || [],
             details: details || null
@@ -155,7 +152,7 @@ export class AppLogger implements Logger {
     public getRequestLogger(requestId: string): RequestLogger {
         const logger: any = {};
 
-        for (const logFunction of ['silly', 'verbose', 'info', 'warn', 'error']) {
+        for (const logFunction of logLevelFunctions) {
             logger[logFunction] = (message: string, tags?: string[], details?: any) => {
                 (<any> this)[logFunction].call(this, message, requestId, tags, details);
             };

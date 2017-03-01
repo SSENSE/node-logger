@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
-    "declaration": true,
     "target": "ES6",
     "module": "commonjs",
     "outDir": "./src/",
     "sourceMap": true,
     "noImplicitAny": true,
-    "removeComments": true
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "allowUnreachableCode": false,
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": [
     "node_modules",

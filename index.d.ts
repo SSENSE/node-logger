@@ -1,13 +1,14 @@
-import {Request, Response} from 'restify';
+import * as restify from 'restify';
+import * as express from 'express';
 
 // AccessLogger
 export class AccessLogger {
-    constructor(applicationId: string);
+    constructor(appId: string);
     public enable(enabled: boolean): void;
-    public makePretty(pretty: boolean): void;
+    public setPretty(pretty: boolean): void;
     public setStream(stream: {write: Function}): void;
     public setAppId(appId: string): void;
-    public logRequest(req: Request, res: Response): void;
+    public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response): void;
 }
 
 // AppLogger related interfaces and data
@@ -25,7 +26,7 @@ export interface Logger {
     getAppId(): string;
     setLevel(level: LogLevel): void;
     getLevel(): LogLevel;
-    makePretty(pretty: boolean): void;
+    setPretty(pretty: boolean): void;
     setStream(stream: {write: Function}): void;
     generateRequestId(): string;
 
@@ -56,7 +57,7 @@ export class AppLogger implements Logger {
     public getAppId(): string;
     public setLevel(level: LogLevel): void;
     public getLevel(): LogLevel;
-    public makePretty(pretty: boolean): void;
+    public setPretty(pretty: boolean): void;
     public setStream(stream: {write: Function}): void;
     public generateRequestId(): string;
 
@@ -73,7 +74,15 @@ export class AppLogger implements Logger {
 // We augment the restify module to expose our custom Request.logger? type.
 declare module 'restify' {
     interface Request {
-        xRequestId: string;
-        logger: RequestLogger;
+        xRequestId?: string;
+        logger?: RequestLogger;
+    }
+}
+
+// We augment the express module to expose our custom Request.logger? type.
+declare module 'express' {
+    interface Request {
+        xRequestId?: string;
+        logger?: RequestLogger;
     }
 }

@@ -17,7 +17,7 @@ export interface Logger {
     enable(enabled: boolean): void;
     setAppId(appId: string): void;
     setLevel(level: LogLevel): void;
-    makePretty(pretty: Boolean): void;
+    setPretty(pretty: Boolean): void;
     setStream(stream: {write: Function}): void;
     generateRequestId(): string;
 
@@ -94,7 +94,7 @@ export class AppLogger implements Logger {
         return this.level;
     }
 
-    public makePretty(pretty: boolean): void {
+    public setPretty(pretty: boolean): void {
         this.pretty = pretty;
     }
 

@@ -12,7 +12,7 @@ class AccessLogger {
     enable(enabled) {
         this.enabled = enabled;
     }
-    makePretty(pretty) {
+    setPretty(pretty) {
         this.pretty = pretty;
     }
     setStream(stream) {
@@ -26,12 +26,21 @@ class AccessLogger {
         if (this.enabled !== true) {
             return;
         }
+        // Work in progress stuff to add request latency in express
+        // if (req.on) {
+        //     const start = process.hrtime();
+        //     req.on('end', () => {
+        //         const end = process.hrtime();
+        //         const ms = (end[0] - start[0]) * 1e3 + (end[1] - start[1]) * 1e-6;
+        //         console.log(ms.toFixed(3));
+        //     });
+        // }
         let line = null;
         if (this.pretty) {
             // tslint:disable-next-line:max-line-length
             const color = res.statusCode >= 500 ? Common_1.Color.red : res.statusCode >= 400 ? Common_1.Color.yellow : res.statusCode >= 300 ? Common_1.Color.cyan : Common_1.Color.green;
             const latency = req._time ? `${Date.now() - req._time} ms` : '-';
-            const size = res.header('content-length') || '-';
+            const size = res.getHeader('content-length') || '-';
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
         }
         else {
@@ -44,7 +53,7 @@ class AccessLogger {
             const query = req.url;
             const httpVersion = `HTTP/${req.httpVersion}`;
             const code = res.statusCode;
-            const size = res.header('content-length') || '-';
+            const size = res.getHeader('content-length') || '-';
             const referer = req.header('referer') || '-';
             const browser = req.header('user-agent') || '-';
             line = `${ip} ${reqId} ${userId} [${date}] "${method} ${query} ${httpVersion}" ${code} ${size} "${referer}" "${browser}"`;

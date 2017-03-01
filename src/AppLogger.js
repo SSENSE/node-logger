@@ -66,7 +66,7 @@ class AppLogger {
     getLevel() {
         return this.level;
     }
-    makePretty(pretty) {
+    setPretty(pretty) {
         this.pretty = pretty;
     }
     setStream(stream) {

@@ -27,7 +27,7 @@ describe('AppLogger', () => {
         logger.info('foo');
         expect(lastLog).to.contain('foo');
         expect(lastLog).to.not.contain('\x1B');
-        logger.makePretty(true);
+        logger.setPretty(true);
         logger.warn('bar', 'logId', [], 'aaa\nbbb');
         expect(lastLog).to.not.contain('foo');
         expect(lastLog).to.contain('\x1B');

@@ -78,7 +78,7 @@ class AppLogger {
             return;
         }
         const logData = {
-            log_id: id || this.requestId,
+            log_id: id || this.generateRequestId(),
             datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
             level: this.getLogLevel(level),
             message: message,

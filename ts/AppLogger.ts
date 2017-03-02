@@ -42,7 +42,6 @@ export class AppLogger implements Logger {
     private stream: {write: Function};
     private enabled: boolean = true;
     private appId: string;
-    private requestId: string;
     private level: LogLevel;
     private pretty: boolean = false;
 
@@ -110,7 +109,7 @@ export class AppLogger implements Logger {
         }
 
         const logData: any = {
-            log_id: id || this.requestId,
+            log_id: id || this.generateRequestId(),
             datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
             level: this.getLogLevel(level),
             message: message,

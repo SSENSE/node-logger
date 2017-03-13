@@ -57,3 +57,20 @@ accessLogger.setPretty(process.env.NODE_ENV === 'development');
 // logRequest(req: Request, res: Response)
 accessLogger.logRequest(req, res);
 ```
+
+### User id logging
+
+If your application manipulates users, you may want to log the connected user id associated to each request.
+This is possible with the AccessLogger `setUserIdCallback` method.
+
+This method allows you to pass a callback that will be called after each request, this callback takes in parameters the `Request` and `Response` objects.
+To store the corresponding user id, just be sure to return a string when this callback is called.
+
+**Example**:
+```javascript
+const accessLogger = new AccessLogger('your_app_id');
+accessLogger.setUserIdCallback((req, res) => {
+  return req.header('customer-id');
+});
+```
+In this case, if a request has a `customer-id` header, it will be logged as `userId` field by the AccessLogger.

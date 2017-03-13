@@ -2,12 +2,17 @@ import * as restify from 'restify';
 import * as express from 'express';
 
 // AccessLogger
+export interface UserIdCallback {
+    (req: restify.Request|express.Request, res: restify.Response|express.Response): string;
+}
+
 export class AccessLogger {
     constructor(appId: string);
     public enable(enabled: boolean): void;
     public setPretty(pretty: boolean): void;
     public setStream(stream: {write: Function}): void;
     public setAppId(appId: string): void;
+    public setUserIdCallback(callback: UserIdCallback): void;
     public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response): void;
 }
 

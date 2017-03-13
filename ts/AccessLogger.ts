@@ -1,7 +1,11 @@
 import * as restify from 'restify';
 import * as express from 'express';
-import * as moment from 'moment';
 import {Color, generateRequestId} from './Common';
+import {BaseLog} from './BaseLog';
+
+export interface UserIdCallback {
+    (req: restify.Request|express.Request, res: restify.Response|express.Response): string;
+}
 
 export class AccessLogger {
 
@@ -9,6 +13,7 @@ export class AccessLogger {
     private enabled: boolean = true;
     private pretty: boolean = false;
     private stream: {write: Function} = process.stdout;
+    private userIdCallback: UserIdCallback;
 
     public constructor(appId: string) {
         this.appId = appId;
@@ -29,6 +34,10 @@ export class AccessLogger {
 
     public setAppId(appId: string): void {
         this.appId = appId;
+    }
+
+    public setUserIdCallback(callback: UserIdCallback): void {
+        this.userIdCallback = callback;
     }
 
     public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response): void {
@@ -52,23 +61,36 @@ export class AccessLogger {
             const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
             const latency = (<any> req)._time ? `${Date.now() - (<any> req)._time} ms` : '-';
             const size = res.getHeader('content-length') || '-';
+
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
         } else {
-            // SSENSE Standardized Access Logs
-            const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
-            const reqId = (<any> req).xRequestId || generateRequestId(this.appId);
-            const userId = '-'; // TODO: Implement it for your application
-            const date = moment().format('DD/MMM/YYYY:HH:mm:ss ZZ');
-            const method = req.method;
-            const query = req.url;
-            const httpVersion = `HTTP/${req.httpVersion}`;
-            const code = res.statusCode;
-            const size = res.getHeader('content-length') || '-';
-            const referer = req.header('referer') || '-';
-            const browser = req.header('user-agent') || '-';
-            line = `${ip} ${reqId} ${userId} [${date}] "${method} ${query} ${httpVersion}" ${code} ${size} "${referer}" "${browser}"`;
+            const log = new BaseLog(this.appId);
+            log.reqId = req.xRequestId || generateRequestId();
+            log.userId = this.getUserId(req, res);
+            log.ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
+            log.method = req.method;
+            log.route = req.url;
+            log.httpVersion = `HTTP/${req.httpVersion}`;
+            log.resCode = res.statusCode;
+            log.resSize = res.getHeader('content-length');
+            log.referer = req.header('referer');
+            log.userAgent = req.header('user-agent');
+
+            line = JSON.stringify(log);
         }
 
         this.stream.write(`${line}\n`);
+    }
+
+    private getUserId(req: restify.Request|express.Request, res: restify.Response|express.Response): string {
+        let userId: string = null;
+
+        if (typeof this.userIdCallback === 'function') {
+            try {
+                userId = this.userIdCallback(req, res);
+            } catch (e) {} // tslint:disable-line:no-empty
+        }
+
+        return userId;
     }
 }

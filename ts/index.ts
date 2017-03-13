@@ -1,6 +1,6 @@
-import {AccessLogger} from './AccessLogger';
+import {AccessLogger, UserIdCallback} from './AccessLogger';
 import {AppLogger, Logger, LogLevel, RequestLogger} from './AppLogger';
 
 export {
-    AccessLogger, AppLogger, Logger, LogLevel, RequestLogger
+    AccessLogger, UserIdCallback, AppLogger, Logger, LogLevel, RequestLogger
 };

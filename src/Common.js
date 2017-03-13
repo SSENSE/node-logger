@@ -9,8 +9,12 @@ var Color;
     Color[Color["blue"] = 34] = "blue";
     Color[Color["cyan"] = 36] = "cyan";
 })(Color = exports.Color || (exports.Color = {}));
-function generateRequestId(appId) {
-    return `${appId}/${uuid.v4()}`;
+function generateRequestId() {
+    return uuid.v4();
 }
 exports.generateRequestId = generateRequestId;
+function getService() {
+    return 'node';
+}
+exports.getService = getService;
 //# sourceMappingURL=Common.js.map

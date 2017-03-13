@@ -8,6 +8,10 @@ export enum Color {
     cyan = 36
 }
 
-export function generateRequestId(appId: string): string {
-    return `${appId}/${uuid.v4()}`;
+export function generateRequestId(): string {
+    return uuid.v4();
+}
+
+export function getService(): string {
+    return 'node';
 }

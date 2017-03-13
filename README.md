@@ -21,7 +21,7 @@ logger.enable(true);
 // Set log level
 logger.setLevel('Silly');
 // Prettify / Indent
-logger.makePretty(true);
+logger.setPretty(true);
 
 // Log
 // silly(message: string, id?: string, tags?: string[], details?: any)
@@ -51,7 +51,7 @@ const accessLogger = new AccessLogger('your_app_id');
 // Enable / Disable
 accessLogger.enable(true);
 // Prettify / Indent
-accessLogger.makePretty(process.env.NODE_ENV === 'development');
+accessLogger.setPretty(process.env.NODE_ENV === 'development');
 
 // Log
 // logRequest(req: Request, res: Response)

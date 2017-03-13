@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const moment = require("moment");
 const Common_1 = require("./Common");
+const BaseLog_1 = require("./BaseLog");
 var LogLevel;
 (function (LogLevel) {
     LogLevel[LogLevel["Silly"] = 0] = "Silly";
@@ -58,7 +58,7 @@ class AppLogger {
         return this.appId;
     }
     generateRequestId() {
-        return Common_1.generateRequestId(this.appId);
+        return Common_1.generateRequestId();
     }
     setLevel(level) {
         this.level = level;
@@ -77,23 +77,21 @@ class AppLogger {
         if (this.enabled !== true || this.level === undefined || level < this.level) {
             return;
         }
-        const logData = {
-            log_id: id || this.generateRequestId(),
-            datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
-            level: this.getLogLevel(level),
-            message: message,
-            tags: tags || [],
-            details: details || null
-        };
+        const log = new BaseLog_1.BaseLog(this.appId);
+        log.reqId = id || this.generateRequestId();
+        log.level = this.getLogLevel(level);
+        log.message = message;
+        log.tags = tags || [];
+        log.details = details || null;
         if (this.pretty) {
-            let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
-            if (typeof logData.details === 'string') {
-                result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+            let result = JSON.stringify(log, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
+            if (typeof log.details === 'string') {
+                result = result.replace(/"details": ".*"/g, `"details": "${log.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
             }
             this.stream.write(`${result}\n`);
         }
         else {
-            this.stream.write(JSON.stringify(logData) + '\n');
+            this.stream.write(JSON.stringify(log) + '\n');
         }
     }
     silly(message, id, tags, details) {

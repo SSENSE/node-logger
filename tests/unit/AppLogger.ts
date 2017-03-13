@@ -27,6 +27,7 @@ describe('AppLogger', () => {
         logger.info('foo');
         expect(lastLog).to.contain('foo');
         expect(lastLog).to.not.contain('\x1B');
+        expect(JSON.parse(lastLog).env).to.equal((<string> process.env.NODE_ENV).toLowerCase());
         logger.setPretty(true);
         logger.warn('bar', 'logId', [], 'aaa\nbbb');
         expect(lastLog).to.not.contain('foo');
@@ -62,7 +63,7 @@ describe('AppLogger', () => {
     it('AppLogger::generateRequestId()', () => {
         const logger = new AppLogger(appId);
         sandbox.stub(uuid, 'v4', () => 'foo');
-        expect(logger.generateRequestId()).to.equal(`${appId}/foo`);
+        expect(logger.generateRequestId()).to.equal('foo');
     });
 
     it('AppLogger::getRequestLogger()', () => {
@@ -81,7 +82,7 @@ describe('AppLogger', () => {
 
         reqLogger.info('foo');
         const result = JSON.parse(lastLog);
-        expect(result.log_id).to.equal(`${appId}/foo`);
+        expect(result.reqId).to.equal('foo');
         expect(result.level).to.equal('info');
         expect(result.message).to.equal('foo');
     });

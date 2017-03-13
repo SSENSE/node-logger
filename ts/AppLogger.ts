@@ -1,5 +1,5 @@
-import * as moment from 'moment';
 import {Color, generateRequestId} from './Common';
+import {BaseLog} from './BaseLog';
 
 export enum LogLevel {
     Silly = 0,
@@ -82,7 +82,7 @@ export class AppLogger implements Logger {
     }
 
     public generateRequestId(): string {
-        return generateRequestId(this.appId);
+        return generateRequestId();
     }
 
     public setLevel(level: LogLevel): void {
@@ -108,23 +108,21 @@ export class AppLogger implements Logger {
             return;
         }
 
-        const logData: any = {
-            log_id: id || this.generateRequestId(),
-            datetime: moment().format('DD/MM/YYYY:HH:mm:ss ZZ'),
-            level: this.getLogLevel(level),
-            message: message,
-            tags: tags || [],
-            details: details || null
-        };
+        const log = new BaseLog(this.appId);
+        log.reqId = id || this.generateRequestId();
+        log.level = this.getLogLevel(level);
+        log.message = message;
+        log.tags = tags || [];
+        log.details = details || null;
 
         if (this.pretty) {
-            let result = JSON.stringify(logData, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
-            if (typeof logData.details === 'string') {
-                result = result.replace(/"details": ".*"/g, `"details": "${logData.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
+            let result = JSON.stringify(log, null, 4).replace(/"level": "([^"]*)"/g, `"level": "${this.colorizeLevel(level)}"`);
+            if (typeof log.details === 'string') {
+                result = result.replace(/"details": ".*"/g, `"details": "${log.details.replace(/\n/g, `\n${' '.repeat(12)}`)}"`);
             }
             this.stream.write(`${result}\n`);
         } else {
-            this.stream.write(JSON.stringify(logData) + '\n');
+            this.stream.write(JSON.stringify(log) + '\n');
         }
     }
 

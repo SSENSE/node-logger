@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const moment = require("moment");
 const Common_1 = require("./Common");
+const BaseLog_1 = require("./BaseLog");
 class AccessLogger {
     constructor(appId) {
         this.enabled = true;
@@ -21,6 +21,9 @@ class AccessLogger {
     }
     setAppId(appId) {
         this.appId = appId;
+    }
+    setUserIdCallback(callback) {
+        this.userIdCallback = callback;
     }
     logRequest(req, res) {
         if (this.enabled !== true) {
@@ -44,21 +47,30 @@ class AccessLogger {
             line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
         }
         else {
-            // SSENSE Standardized Access Logs
-            const ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
-            const reqId = req.xRequestId || Common_1.generateRequestId(this.appId);
-            const userId = '-'; // TODO: Implement it for your application
-            const date = moment().format('DD/MMM/YYYY:HH:mm:ss ZZ');
-            const method = req.method;
-            const query = req.url;
-            const httpVersion = `HTTP/${req.httpVersion}`;
-            const code = res.statusCode;
-            const size = res.getHeader('content-length') || '-';
-            const referer = req.header('referer') || '-';
-            const browser = req.header('user-agent') || '-';
-            line = `${ip} ${reqId} ${userId} [${date}] "${method} ${query} ${httpVersion}" ${code} ${size} "${referer}" "${browser}"`;
+            const log = new BaseLog_1.BaseLog(this.appId);
+            log.reqId = req.xRequestId || Common_1.generateRequestId();
+            log.userId = this.getUserId(req, res);
+            log.ip = req.header('x-forwarded-for') || req.connection.remoteAddress;
+            log.method = req.method;
+            log.route = req.url;
+            log.httpVersion = `HTTP/${req.httpVersion}`;
+            log.resCode = res.statusCode;
+            log.resSize = res.getHeader('content-length');
+            log.referer = req.header('referer');
+            log.userAgent = req.header('user-agent');
+            line = JSON.stringify(log);
         }
         this.stream.write(`${line}\n`);
+    }
+    getUserId(req, res) {
+        let userId = null;
+        if (typeof this.userIdCallback === 'function') {
+            try {
+                userId = this.userIdCallback(req, res);
+            }
+            catch (e) { } // tslint:disable-line:no-empty
+        }
+        return userId;
     }
 }
 exports.AccessLogger = AccessLogger;

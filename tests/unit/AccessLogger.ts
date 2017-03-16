@@ -166,21 +166,25 @@ describe('AccessLogger', () => {
 
         // Create server
         const server = express();
-        server.get('/foo', (req, res, next) => {
-            res.send('bar');
-            next();
+        server.use((req, res, next) => {
+            logger.logRequest(req, res, next);
         });
 
-        server.use((req, res) => {
-            logger.logRequest(req, res);
+        server.get('/foo', (req, res, next) => {
+            res.send('bar');
         });
 
         logger.setPretty(true);
         await Request.getPage(server, '/foo');
-        expect(/^GET \/foo \x1B\[32m200\x1B\[0m - - 3\n$/.test(lastLog)).to.equal(true, 'Last log should be as expected');
+        expect(/^GET \/foo \x1B\[32m200\x1B\[0m \d+ ms - 3\n$/.test(lastLog)).to.equal(true, 'Last log should be as expected');
 
         logger.setPretty(false);
         await Request.getPage(server, '/foo');
         expect(JSON.parse(lastLog).env).to.equal(null, 'Result should be as expected');
+
+        lastLog = null;
+        logger.enable(false);
+        await Request.getPage(server, '/foo');
+        expect(lastLog).to.equal(null, 'Result should be as expected');
     });
 });

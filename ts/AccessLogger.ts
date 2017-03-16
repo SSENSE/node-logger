@@ -1,5 +1,6 @@
 import * as restify from 'restify';
 import * as express from 'express';
+import * as onFinished from 'on-finished';
 import {Color, generateRequestId} from './Common';
 import {BaseLog} from './BaseLog';
 
@@ -40,21 +41,23 @@ export class AccessLogger {
         this.userIdCallback = callback;
     }
 
-    public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response): void {
-        if (this.enabled !== true) {
-            return;
+    public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response, next?: Function): void {
+        if (typeof next === 'function') {
+            if (this.enabled === true) {
+                (<any> req)._time = Date.now();
+
+                onFinished(res, () => {
+                    this.log(req, res);
+                });
+            }
+
+            next();
+        } else if (this.enabled === true) {
+            this.log(req, res);
         }
+    }
 
-        // Work in progress stuff to add request latency in express
-        // if (req.on) {
-        //     const start = process.hrtime();
-        //     req.on('end', () => {
-        //         const end = process.hrtime();
-        //         const ms = (end[0] - start[0]) * 1e3 + (end[1] - start[1]) * 1e-6;
-        //         console.log(ms.toFixed(3));
-        //     });
-        // }
-
+    private log(req: restify.Request|express.Request, res: restify.Response|express.Response): void {
         let line: string = null;
         if (this.pretty) { // Colorized, wimpy, developer logs
             // tslint:disable-next-line:max-line-length

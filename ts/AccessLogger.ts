@@ -1,5 +1,6 @@
 import * as restify from 'restify';
 import * as express from 'express';
+import * as onHeaders from 'on-headers';
 import * as onFinished from 'on-finished';
 import {Color, generateRequestId} from './Common';
 import {BaseLog} from './BaseLog';
@@ -44,10 +45,15 @@ export class AccessLogger {
     public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response, next?: Function): void {
         if (typeof next === 'function') {
             if (this.enabled === true) {
-                (<any> req)._time = Date.now();
+                const start = Date.now();
+                let duration: number = 0;
+
+                onHeaders(res, () => {
+                    duration = Date.now() - start;
+                });
 
                 onFinished(res, () => {
-                    this.log(req, res);
+                    this.log(req, res, duration);
                 });
             }
 
@@ -57,15 +63,17 @@ export class AccessLogger {
         }
     }
 
-    private log(req: restify.Request|express.Request, res: restify.Response|express.Response): void {
+    private log(req: restify.Request|express.Request, res: restify.Response|express.Response, duration?: number): void {
         let line: string = null;
+        const latency = typeof duration === 'number' ? duration : ((<any> req)._time ? Date.now() - (<any> req)._time : undefined);
+
         if (this.pretty) { // Colorized, wimpy, developer logs
             // tslint:disable-next-line:max-line-length
             const color = res.statusCode >= 500 ? Color.red : res.statusCode >= 400 ? Color.yellow : res.statusCode >= 300 ? Color.cyan : Color.green;
-            const latency = (<any> req)._time ? `${Date.now() - (<any> req)._time} ms` : '-';
+            const resTime = latency ? `${latency} ms` : '-';
             const size = res.getHeader('content-length') || '-';
 
-            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
+            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${resTime} - ${size}`;
         } else {
             const log = new BaseLog(this.appId);
             log.reqId = req.xRequestId || generateRequestId();
@@ -75,7 +83,8 @@ export class AccessLogger {
             log.route = req.url;
             log.httpVersion = `HTTP/${req.httpVersion}`;
             log.resCode = res.statusCode;
-            log.resSize = res.getHeader('content-length');
+            log.resSize = +res.getHeader('content-length');
+            log.resTime = latency;
             log.referer = req.header('referer');
             log.userAgent = req.header('user-agent');
 

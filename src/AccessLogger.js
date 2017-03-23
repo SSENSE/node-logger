@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const onHeaders = require("on-headers");
+const onFinished = require("on-finished");
 const Common_1 = require("./Common");
 const BaseLog_1 = require("./BaseLog");
 class AccessLogger {
@@ -25,26 +27,33 @@ class AccessLogger {
     setUserIdCallback(callback) {
         this.userIdCallback = callback;
     }
-    logRequest(req, res) {
-        if (this.enabled !== true) {
-            return;
+    logRequest(req, res, next) {
+        if (typeof next === 'function') {
+            if (this.enabled === true) {
+                const start = Date.now();
+                let duration = 0;
+                onHeaders(res, () => {
+                    duration = Date.now() - start;
+                });
+                onFinished(res, () => {
+                    this.log(req, res, duration);
+                });
+            }
+            next();
         }
-        // Work in progress stuff to add request latency in express
-        // if (req.on) {
-        //     const start = process.hrtime();
-        //     req.on('end', () => {
-        //         const end = process.hrtime();
-        //         const ms = (end[0] - start[0]) * 1e3 + (end[1] - start[1]) * 1e-6;
-        //         console.log(ms.toFixed(3));
-        //     });
-        // }
+        else if (this.enabled === true) {
+            this.log(req, res);
+        }
+    }
+    log(req, res, duration) {
         let line = null;
+        const latency = typeof duration === 'number' ? duration : (req._time ? Date.now() - req._time : undefined);
         if (this.pretty) {
             // tslint:disable-next-line:max-line-length
             const color = res.statusCode >= 500 ? Common_1.Color.red : res.statusCode >= 400 ? Common_1.Color.yellow : res.statusCode >= 300 ? Common_1.Color.cyan : Common_1.Color.green;
-            const latency = req._time ? `${Date.now() - req._time} ms` : '-';
+            const resTime = latency ? `${latency} ms` : '-';
             const size = res.getHeader('content-length') || '-';
-            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${latency} - ${size}`;
+            line = `${req.method} ${req.url} \x1B[${color}m${res.statusCode}\x1B[0m ${resTime} - ${size}`;
         }
         else {
             const log = new BaseLog_1.BaseLog(this.appId);
@@ -55,7 +64,8 @@ class AccessLogger {
             log.route = req.url;
             log.httpVersion = `HTTP/${req.httpVersion}`;
             log.resCode = res.statusCode;
-            log.resSize = res.getHeader('content-length');
+            log.resSize = +res.getHeader('content-length');
+            log.resTime = latency;
             log.referer = req.header('referer');
             log.userAgent = req.header('user-agent');
             line = JSON.stringify(log);

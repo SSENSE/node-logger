@@ -13,7 +13,7 @@ export class AccessLogger {
     public setStream(stream: {write: Function}): void;
     public setAppId(appId: string): void;
     public setUserIdCallback(callback: UserIdCallback): void;
-    public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response): void;
+    public logRequest(req: restify.Request|express.Request, res: restify.Response|express.Response, next?: Function): void;
 }
 
 // AppLogger related interfaces and data
